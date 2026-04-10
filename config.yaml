@@ -3,25 +3,49 @@
 domain: api.deepseek.com
 
 # 后端API配置列表
+# 每个API配置包含以下字段:
+#   name: API的唯一标识符，用于路由匹配
+#   endpoint: API服务的基础URL
+#   custom_model_id: 客户端请求中使用的模型名称（会被转换为target_model_id）
+#   target_model_id: 实际调用的后端模型名称
+#   stream_mode: 流式响应配置，null表示使用API默认行为
+#   active: 布尔值，控制该API是否被激活用于请求路由
 apis:
+  - name: "volcengine"
+    endpoint: "https://ark.cn-beijing.volces.com/api/coding/v3"
+    custom_model_id: "ark-code-latest"
+    target_model_id: "ark-code-latest"
+    stream_mode: null
+    active: true
+
+  - name: "nvidia"
+    endpoint: "https://integrate.api.nvidia.com/v1"
+    custom_model_id: "nvidia/glm5"
+    target_model_id: "z-ai/glm5"
+    stream_mode: null
+    active: true
+
   - name: "deepseek-r1"
     endpoint: "https://api.deepseek.com"
     custom_model_id: "deepseek-reasoner"
     target_model_id: "deepseek-reasoner"
     stream_mode: null
-    active: true
+    active: false
+
   - name: "kimi-k2"
     endpoint: "https://api.moonshot.cn"
-    custom_model_id: "kimi-k2-0711-preview"
-    target_model_id: "kimi-k2-0711-preview"
+    custom_model_id: "kimi-k2.5"
+    target_model_id: "kimi-k2.5"
     stream_mode: null
-    active: true
+    active: false
+
   - name: "qwen3-coder-plus"
     endpoint: "https://dashscope.aliyuncs.com/compatible-mode"
     custom_model_id: "qwen3-coder-plus"
     target_model_id: "qwen3-coder-plus"
     stream_mode: null
-    active: true
+    active: false
+
 # 代理服务器配置
 server:
   port: 443
