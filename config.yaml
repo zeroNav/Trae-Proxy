@@ -20,17 +20,10 @@ apis:
 
   - name: "nvidia"
     endpoint: "https://integrate.api.nvidia.com/v1"
-    custom_model_id: "nvidia/glm5"
+    custom_model_id: "deepseek-reasoner"
     target_model_id: "z-ai/glm5"
     stream_mode: null
     active: true
-
-  - name: "deepseek-r1"
-    endpoint: "https://api.deepseek.com"
-    custom_model_id: "deepseek-reasoner"
-    target_model_id: "deepseek-reasoner"
-    stream_mode: null
-    active: false
 
   - name: "kimi-k2"
     endpoint: "https://api.moonshot.cn"

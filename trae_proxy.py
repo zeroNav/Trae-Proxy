@@ -11,6 +11,7 @@ import os
 import sys
 import yaml
 from datetime import datetime
+from urllib.parse import urlsplit, urlunsplit
 
 # 默认配置
 TARGET_API_BASE_URL = "https://api.deepseek.com"
@@ -54,6 +55,7 @@ def v1_root():
     })
 
 @app.route('/v1/models', methods=['GET'])
+@app.route('/models', methods=['GET'])
 def list_models():
     """列出可用模型"""
     try:
@@ -124,6 +126,11 @@ def select_backend_by_model(requested_model):
             logger.info(f"根据模型ID匹配到后端: {api['name']} -> {api['endpoint']}")
             return api
     
+    # 如果客户端明确指定了模型，但未匹配到配置，则不回退，避免误路由到错误后端
+    if requested_model:
+        logger.warning(f"未找到模型 {requested_model} 对应的激活后端配置")
+        return None
+    
     # 如果没有精确匹配，使用第一个激活的API
     for api in apis:
         if api.get('active', False):
@@ -136,6 +143,57 @@ def select_backend_by_model(requested_model):
         return apis[0]
     
     return None
+
+def build_target_url(base_url, api_path):
+    """根据后端endpoint智能拼接目标URL，避免重复拼接/v1。"""
+    parsed = urlsplit((base_url or "").strip())
+    if not parsed.scheme or not parsed.netloc:
+        raise ValueError(f"无效的后端endpoint: {base_url}")
+
+    base_path = parsed.path.rstrip('/')
+    normalized_api_path = '/' + api_path.lstrip('/')
+
+    # 如果endpoint已经是完整接口路径，直接使用
+    if base_path.endswith(normalized_api_path):
+        final_path = base_path
+    else:
+        trimmed_api_path = normalized_api_path
+        # endpoint已包含/v1时，不再重复添加
+        if base_path.endswith('/v1') and normalized_api_path.startswith('/v1/'):
+            trimmed_api_path = normalized_api_path[3:]
+        final_path = f"{base_path}{trimmed_api_path}" if base_path else trimmed_api_path
+
+    if not final_path.startswith('/'):
+        final_path = '/' + final_path
+
+    return urlunsplit((parsed.scheme, parsed.netloc, final_path, '', ''))
+
+def send_upstream_request(target_url, req_json, headers):
+    """发送上游请求；针对RemoteDisconnected做一次重试，降低偶发断连影响。"""
+    stream_enabled = req_json.get('stream', False)
+    timeout = (15, 300)  # (连接超时, 读取超时)
+    last_error = None
+
+    for attempt in range(2):
+        try:
+            with requests.Session() as session:
+                return session.post(
+                    target_url,
+                    json=req_json,
+                    headers=headers,
+                    stream=stream_enabled,
+                    timeout=timeout
+                )
+        except requests.exceptions.ConnectionError as e:
+            last_error = e
+            # 仅对远端提前断开连接做一次重试
+            if attempt == 0 and "RemoteDisconnected" in str(e):
+                logger.warning(f"上游连接被提前关闭，准备重试一次: {target_url}")
+                continue
+            raise
+
+    if last_error:
+        raise last_error
 
 def generate_stream(response):
     """生成流式响应"""
@@ -164,6 +222,7 @@ def simulate_stream(response_json):
         yield f'data: {{"error": "模拟流式响应失败: {str(e)}"}}\n\n'.encode()
 
 @app.route('/v1/chat/completions', methods=['POST'])
+@app.route('/chat/completions', methods=['POST'])
 def chat_completions():
     """处理聊天完成请求"""
     try:
@@ -182,7 +241,10 @@ def chat_completions():
         
         # 调试日志
         if DEBUG_MODE:
-            debug_log(f"请求头: {dict(request.headers)}")
+            safe_headers = dict(request.headers)
+            if 'Authorization' in safe_headers:
+                safe_headers['Authorization'] = 'Bearer ***'
+            debug_log(f"请求头: {safe_headers}")
             debug_log(f"请求体: {json.dumps(req_json, ensure_ascii=False)}")
         
         # 获取请求的模型ID
@@ -219,13 +281,23 @@ def chat_completions():
                     req_json['stream'] = STREAM_MODE == 'true'
                     debug_log(f"流模式从 {original_stream} 修改为 {req_json['stream']}")
             else:
-                # 回退到单后端模式
+                if requested_model:
+                    return jsonify({
+                        "error": {
+                            "message": f"未找到模型 {requested_model} 对应的后端配置",
+                            "type": "invalid_request_error",
+                            "param": "model",
+                            "code": "model_not_found"
+                        }
+                    }), 400
+
+                # 当请求未携带模型时，保留原有回退行为
                 target_api_url = TARGET_API_BASE_URL
                 target_model_id = TARGET_MODEL_ID
                 custom_model_id = CUSTOM_MODEL_ID
                 stream_mode = STREAM_MODE
                 
-                logger.warning("多后端配置无效，回退到单后端模式")
+                logger.warning("请求未指定模型，回退到单后端默认配置")
                 
                 # 修改模型ID
                 if 'model' in req_json:
@@ -265,7 +337,8 @@ def chat_completions():
         
         # 准备转发请求
         headers = {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Connection': 'close'
         }
         
         # 复制Authorization头
@@ -274,17 +347,11 @@ def chat_completions():
             headers['Authorization'] = auth_header
         
         # 构建目标URL
-        target_url = f"{target_api_url}/v1/chat/completions"
+        target_url = build_target_url(target_api_url, request.path)
         debug_log(f"转发请求到: {target_url}")
         
         # 发送请求到目标API
-        response = requests.post(
-            target_url,
-            json=req_json,
-            headers=headers,
-            stream=req_json.get('stream', False),
-            timeout=300
-        )
+        response = send_upstream_request(target_url, req_json, headers)
         
         # 检查响应状态
         response.raise_for_status()
