@@ -13,15 +13,15 @@ import yaml
 from datetime import datetime
 
 # 默认配置
-TARGET_API_BASE_URL = "https://api.openai.com"
+TARGET_API_BASE_URL = "https://api.deepseek.com"
 CUSTOM_MODEL_ID = "gpt-4"
 TARGET_MODEL_ID = "gpt-4"
 STREAM_MODE = None  # None: 不修改, 'true': 强制开启, 'false': 强制关闭
 DEBUG_MODE = False
 
 # 证书文件路径
-CERT_FILE = os.path.join("ca", "api.openai.com.crt")
-KEY_FILE = os.path.join("ca", "api.openai.com.key")
+CERT_FILE = os.path.join("ca", "api.deepseek.com.crt")
+KEY_FILE = os.path.join("ca", "api.deepseek.com.key")
 
 # 多后端配置
 MULTI_BACKEND_CONFIG = None

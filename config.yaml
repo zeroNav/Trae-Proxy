@@ -1,6 +1,6 @@
 # Trae-Proxy 配置文件
 # 代理域名配置
-domain: api.openai.com
+domain: api.deepseek.com
 
 # 后端API配置列表
 apis:

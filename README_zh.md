@@ -5,14 +5,14 @@
 
 [English](README.md) | [简体中文](README_zh.md)
 
- 一个智能的API代理工具，专门用于拦截和重定向OpenAI API请求到自定义后端服务。支持多后端配置、动态模型映射和流式响应处理。
+ 一个智能的API代理工具，专门用于拦截和重定向deepseek openapi API请求到自定义后端服务。支持多后端配置、动态模型映射和流式响应处理。
 
 
 ## 📢 引言
 
 1. Trae IDE 目前支持自定义模型服务商，但是仅支持列表内固定的模型服务商，不支持自定义 base_url，所以无法使用自己的API服务。
 2. Github上有不少提出相关的Issue，但是官方基本处于不处理状态，如：[增加自定义模型服务商 base_url 的能力](https://github.com/Trae-AI/Trae/issues/1206)、[自定义 AI 路由 Custom AI API Endpoint](https://github.com/Trae-AI/Trae/issues/963)
-3. 基于上述情况，开发了Trae-Proxy，以代理方式将OpenAI的API请求转发到自定义后端，同时支持自定义模型ID映射和动态后端切换。
+3. 基于上述情况，开发了Trae-Proxy，以代理方式将DeepSeek的OpenAPI请求转发到自定义后端，同时支持自定义模型ID映射和动态后端切换。
 4. 希望官方早日上线自定义base_url的能力，使Trae成为真正可自定义的IDE。
 
 ## 📸 截图
@@ -25,7 +25,7 @@
 <h3>Custom-Model</h3>
 <img src="./asset/Custom-Model.png" alt="Custom-Model" width="330">
 <br>
-<em>支持自定义Openai兼容API</em>
+<em>支持自定义DeepSeek兼容API</em>
 </td>
 <td align="center">
 <h3>IDE-Builder</h3>
@@ -39,7 +39,7 @@
 
 ## ✨ 主要功能
 
-- **智能代理**: 拦截OpenAI API请求并转发到自定义后端
+- **智能代理**: 拦截DeepSeek OpenAPI请求并转发到自定义后端
 - **多后端支持**: 配置多个API后端，支持动态切换
 - **模型映射**: 自定义模型ID映射，无缝替换目标模型
 - **流式响应**: 支持流式和非流式响应模式切换
@@ -48,17 +48,17 @@
 
 ## ⚠️ 声明
 
-1. **Trae-Proxy** 是一个拦截和重定向OpenAI API请求到自定义后端服务的工具，不涉及任何修改和逆向官方软件的行为。
+1. **Trae-Proxy** 是一个拦截和重定向deepseek openapi API请求到自定义后端服务的工具，不涉及任何修改和逆向官方软件的行为。
 2. 本工具仅用于学习和研究目的，使用者应遵守相关法律法规和服务条款。
-3. 理论上不仅是TraeIDE，其他支持接入OpenAI SDK或API的服务的IDE或者客户端，都可以无缝接入。
+3. 理论上不仅是TraeIDE，其他支持接入DeepSeek SDK或API的服务的IDE或者客户端，都可以无缝接入。
 
 ## 🚀 快速开始
 
 Trae-Proxy安装和使用分为以下几个步骤：
 
 1. Trae-Proxy服务端安装、配置、启动；
-2. 客户端安装自签名证书，修改Hosts映射；（将openai域名转发到代理服务上）
-3. IDE中添加模型，服务商选择OpenAI，自定义模型ID，输入API密钥；
+2. 客户端安装自签名证书，修改Hosts映射；（将DeepSeek域名转发到代理服务上）
+3. IDE中添加模型，服务商选择DeepSeek，自定义模型ID，输入API密钥；
 
 ### 使用Docker Compose（推荐）
 
@@ -94,7 +94,7 @@ Trae-Proxy 使用YAML格式的配置文件 `config.yaml`：
 ```yaml
 # Trae-Proxy 配置文件
 # 代理域名配置
-domain: api.openai.com
+domain: api.deepseek.com
 
 # 后端API配置列表
 apis:
@@ -130,14 +130,14 @@ server:
 
 ```bash
 # 从服务器复制CA证书
-scp user@your-server-ip:/path/to/trae-proxy/ca/api.openai.com.crt .
+scp user@your-server-ip:/path/to/trae-proxy/ca/api.deepseek.com.crt .
 ```
 
 ### 2. 安装CA证书
 
 #### Windows 系统
 
-1. 双击 `api.openai.com.crt` 文件
+1. 双击 `api.deepseek.com.crt` 文件
 2. 选择"安装证书"
 3. 选择"本地计算机"
 4. 选择"将所有证书放入下列存储" → "浏览" → "受信任的根证书颁发机构"
@@ -145,7 +145,7 @@ scp user@your-server-ip:/path/to/trae-proxy/ca/api.openai.com.crt .
 
 #### macOS 系统
 
-1. 双击 `api.openai.com.crt` 文件，系统会打开"钥匙串访问"
+1. 双击 `api.deepseek.com.crt` 文件，系统会打开"钥匙串访问"
 2. 将证书添加到"系统"钥匙串
 3. 双击导入的证书，展开"信任"部分
 4. 将"使用此证书时"设置为"始终信任"
@@ -158,7 +158,7 @@ scp user@your-server-ip:/path/to/trae-proxy/ca/api.openai.com.crt .
 1. 以管理员身份编辑 `C:\Windows\System32\drivers\etc\hosts`
 2. 添加以下行（替换为您的服务器IP）：
    ```
-   your-server-ip api.openai.com
+   your-server-ip api.deepseek.com
    ```
 
 #### macOS 系统
@@ -167,13 +167,13 @@ scp user@your-server-ip:/path/to/trae-proxy/ca/api.openai.com.crt .
 2. 执行 `sudo vim /etc/hosts`
 3. 添加以下行（替换为您的服务器IP）：
    ```
-   your-server-ip api.openai.com
+   your-server-ip api.deepseek.com
    ```
 
 ### 4. 测试连接
 
 ```bash
-curl https://api.openai.com/v1/models
+curl https://api.deepseek.com/v1/models
 ```
 
 如果配置正确，您应该能看到代理服务器返回的模型列表。
@@ -220,8 +220,8 @@ trae-proxy/
 
 ## 💡 使用场景
 
-- **API代理**: 将OpenAI API请求转发到私有部署的模型服务
-- **模型替换**: 使用自定义模型替换OpenAI官方模型
+- **API代理**: 将DeepSeek OpenAPI请求转发到私有部署的模型服务
+- **模型替换**: 使用自定义模型替换DeepSeek官方模型
 - **负载均衡**: 在多个后端服务之间分发请求
 - **开发测试**: 本地开发环境中的API模拟和测试
 

@@ -93,7 +93,7 @@ Trae-Proxy uses a YAML format configuration file `config.yaml`:
 ```yaml
 # Trae-Proxy configuration file
 # Proxy domain configuration
-domain: api.openai.com
+domain: api.deepseek.com
 
 # Backend API configuration list
 apis:
@@ -129,14 +129,14 @@ Copy the CA certificate from the server to your local machine:
 
 ```bash
 # Copy CA certificate from server
-scp user@your-server-ip:/path/to/trae-proxy/ca/api.openai.com.crt .
+scp user@your-server-ip:/path/to/trae-proxy/ca/api.deepseek.com.crt .
 ```
 
 ### 2. Install CA Certificate
 
 #### Windows
 
-1. Double-click the `api.openai.com.crt` file
+1. Double-click the `api.deepseek.com.crt` file
 2. Select "Install Certificate"
 3. Select "Local Machine"
 4. Select "Place all certificates in the following store" → "Browse" → "Trusted Root Certification Authorities"
@@ -144,7 +144,7 @@ scp user@your-server-ip:/path/to/trae-proxy/ca/api.openai.com.crt .
 
 #### macOS
 
-1. Double-click the `api.openai.com.crt` file, which will open "Keychain Access"
+1. Double-click the `api.deepseek.com.crt` file, which will open "Keychain Access"
 2. Add the certificate to the "System" keychain
 3. Double-click the imported certificate, expand the "Trust" section
 4. Set "When using this certificate" to "Always Trust"
@@ -157,7 +157,7 @@ scp user@your-server-ip:/path/to/trae-proxy/ca/api.openai.com.crt .
 1. Edit `C:\Windows\System32\drivers\etc\hosts` as administrator
 2. Add the following line (replace with your server IP):
    ```
-   your-server-ip api.openai.com
+   your-server-ip api.deepseek.com
    ```
 
 #### macOS
@@ -166,13 +166,13 @@ scp user@your-server-ip:/path/to/trae-proxy/ca/api.openai.com.crt .
 2. Execute `sudo vim /etc/hosts`
 3. Add the following line (replace with your server IP):
    ```
-   your-server-ip api.openai.com
+   your-server-ip api.deepseek.com
    ```
 
 ### 4. Test Connection
 
 ```bash
-curl https://api.openai.com/v1/models
+curl https://api.deepseek.com/v1/models
 ```
 
 If configured correctly, you should see the model list returned by the proxy server.
@@ -218,8 +218,8 @@ trae-proxy/
 
 ## 💡 Use Cases
 
-- **API Proxy**: Forward OpenAI API requests to privately deployed model services
-- **Model Replacement**: Replace official OpenAI models with custom models
+- **API Proxy**: Forward DeepSeek OpenAPI requests to privately deployed model services
+- **Model Replacement**: Replace official DeepSeek models with custom models
 - **Load Balancing**: Distribute requests among multiple backend services
 - **Development Testing**: API simulation and testing in local development environments
 

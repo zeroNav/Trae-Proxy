@@ -30,11 +30,11 @@ def load_config():
         
         # 如果配置为空，返回默认配置
         return {
-            "domain": "api.openai.com",
+            "domain": "api.deepseek.com",
             "apis": [
                 {
-                    "name": "默认OpenAI API",
-                    "endpoint": "https://api.openai.com",
+                    "name": "默认DeepSeek API",
+                    "endpoint": "https://api.deepseek.com",
                     "custom_model_id": "gpt-4",
                     "target_model_id": "gpt-4",
                     "stream_mode": None,
@@ -49,11 +49,11 @@ def load_config():
     except Exception as e:
         logger.error(f"加载配置失败: {str(e)}")
         return {
-            "domain": "api.openai.com",
+            "domain": "api.deepseek.com",
             "apis": [
                 {
-                    "name": "默认OpenAI API",
-                    "endpoint": "https://api.openai.com",
+                    "name": "默认DeepSeek API",
+                    "endpoint": "https://api.deepseek.com",
                     "custom_model_id": "gpt-4",
                     "target_model_id": "gpt-4",
                     "stream_mode": None,
@@ -84,7 +84,7 @@ def list_apis():
     
     print("\n当前API配置列表:")
     print("-" * 80)
-    print(f"代理域名: {config.get('domain', 'api.openai.com')}")
+    print(f"代理域名: {config.get('domain', 'api.deepseek.com')}")
     print("-" * 80)
     
     for i, api in enumerate(apis):
@@ -265,7 +265,7 @@ def generate_certificates(domain=None):
     """生成证书"""
     if domain is None:
         config = load_config()
-        domain = config.get('domain', 'api.openai.com')
+        domain = config.get('domain', 'api.deepseek.com')
     
     logger.info(f"为域名 {domain} 生成证书...")
     
@@ -300,7 +300,7 @@ def generate_certificates(domain=None):
 def start_proxy_server(debug=False):
     """启动代理服务器"""
     config = load_config()
-    domain = config.get('domain', 'api.openai.com')
+    domain = config.get('domain', 'api.deepseek.com')
     apis = config.get('apis', [])
     
     # 检查是否有激活的API配置

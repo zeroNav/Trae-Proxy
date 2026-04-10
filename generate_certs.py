@@ -50,7 +50,7 @@ def check_openssl():
     except:
         error("未找到OpenSSL。请确保OpenSSL已安装并在PATH中。")
 
-def create_default_config_files(domain="api.openai.com"):
+def create_default_config_files(domain="api.deepseek.com"):
     """创建默认的OpenSSL配置文件"""
     # 创建ca目录（如果不存在）
     os.makedirs("ca", exist_ok=True)
@@ -157,7 +157,7 @@ def generate_ca_cert():
     
     print("CA证书生成完成")
 
-def generate_server_cert(domain="api.openai.com"):
+def generate_server_cert(domain="api.deepseek.com"):
     """为指定域名生成服务器证书"""
     print(f"为域名 {domain} 生成服务器证书...")
     
@@ -213,7 +213,7 @@ def generate_server_cert(domain="api.openai.com"):
 def main():
     """主函数"""
     # 解析命令行参数
-    domain = "api.openai.com"
+    domain = "api.deepseek.com"
     if len(sys.argv) > 1 and sys.argv[1] == "--domain" and len(sys.argv) > 2:
         domain = sys.argv[2]
     
