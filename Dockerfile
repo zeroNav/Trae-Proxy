@@ -1,3 +1,10 @@
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+
 FROM python:3.9-slim
 
 WORKDIR /app

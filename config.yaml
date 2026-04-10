@@ -39,6 +39,18 @@ apis:
     stream_mode: null
     active: false
 
+# 出站代理配置（容器访问外网时使用）
+# enabled: 是否启用代理逻辑
+# trust_env: 是否信任容器环境变量中的HTTP_PROXY/HTTPS_PROXY
+# http/https: 显式代理地址，留空表示仅使用环境变量
+# no_proxy: 逗号分隔，不走代理的域名后缀或主机名
+proxy:
+  enabled: true
+  trust_env: true
+  http: "http://host.docker.internal:7897"
+  https: "http://host.docker.internal:7897"
+  no_proxy: "localhost,127.0.0.1"
+
 # 代理服务器配置
 server:
   port: 443

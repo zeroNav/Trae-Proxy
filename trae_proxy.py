@@ -29,6 +29,13 @@ MULTI_BACKEND_CONFIG = None
 CONFIG_FILE = "config.yaml"
 CONFIG_MTIME = None
 
+# 出站代理配置
+OUTBOUND_PROXY_ENABLED = False
+OUTBOUND_PROXY_TRUST_ENV = True
+OUTBOUND_PROXY_HTTP = ""
+OUTBOUND_PROXY_HTTPS = ""
+OUTBOUND_PROXY_NO_PROXY = ""
+
 # 初始化Flask应用
 app = Flask(__name__)
 
@@ -102,6 +109,8 @@ def debug_log(message):
 def load_multi_backend_config():
     """加载多后端配置"""
     global MULTI_BACKEND_CONFIG, CONFIG_MTIME
+    global OUTBOUND_PROXY_ENABLED, OUTBOUND_PROXY_TRUST_ENV
+    global OUTBOUND_PROXY_HTTP, OUTBOUND_PROXY_HTTPS, OUTBOUND_PROXY_NO_PROXY
     try:
         if not os.path.exists(CONFIG_FILE):
             logger.warning("配置文件不存在，使用单后端模式")
@@ -113,10 +122,23 @@ def load_multi_backend_config():
 
         with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f) or {}
+
+        proxy_config = config.get('proxy', {}) or config.get('outbound_proxy', {}) or {}
+        OUTBOUND_PROXY_ENABLED = bool(proxy_config.get('enabled', False))
+        OUTBOUND_PROXY_TRUST_ENV = bool(proxy_config.get('trust_env', True))
+        OUTBOUND_PROXY_HTTP = str(proxy_config.get('http', '')).strip()
+        OUTBOUND_PROXY_HTTPS = str(proxy_config.get('https', '')).strip()
+        OUTBOUND_PROXY_NO_PROXY = str(proxy_config.get('no_proxy', '')).strip()
+
         MULTI_BACKEND_CONFIG = config
         CONFIG_MTIME = current_mtime
 
         logger.info(f"已加载多后端配置，共 {len(config.get('apis', []))} 个API配置")
+        logger.info(
+            f"出站代理配置: enabled={OUTBOUND_PROXY_ENABLED}, trust_env={OUTBOUND_PROXY_TRUST_ENV}, "
+            f"http={'已设置' if OUTBOUND_PROXY_HTTP else '未设置'}, "
+            f"https={'已设置' if OUTBOUND_PROXY_HTTPS else '未设置'}"
+        )
         return True
     except Exception as e:
         logger.error(f"加载多后端配置失败: {str(e)}")
@@ -177,6 +199,49 @@ def build_target_url(base_url, api_path):
 
     return urlunsplit((parsed.scheme, parsed.netloc, final_path, '', ''))
 
+def should_bypass_proxy(target_url):
+    """根据no_proxy规则判断当前目标地址是否应绕过代理。"""
+    if not OUTBOUND_PROXY_NO_PROXY:
+        return False
+
+    target_host = (urlsplit(target_url).hostname or "").lower()
+    if not target_host:
+        return False
+
+    rules = [rule.strip().lower() for rule in OUTBOUND_PROXY_NO_PROXY.split(',') if rule.strip()]
+    for rule in rules:
+        if rule == '*':
+            return True
+        if rule.startswith('.'):
+            if target_host.endswith(rule):
+                return True
+            continue
+        if target_host == rule or target_host.endswith(f".{rule}"):
+            return True
+    return False
+
+def create_upstream_session(target_url):
+    """创建上游请求会话并应用代理配置。"""
+    session = requests.Session()
+    session.trust_env = OUTBOUND_PROXY_TRUST_ENV
+
+    if not OUTBOUND_PROXY_ENABLED:
+        return session
+
+    if should_bypass_proxy(target_url):
+        session.proxies.clear()
+        return session
+
+    proxies = {}
+    if OUTBOUND_PROXY_HTTP:
+        proxies['http'] = OUTBOUND_PROXY_HTTP
+    if OUTBOUND_PROXY_HTTPS:
+        proxies['https'] = OUTBOUND_PROXY_HTTPS
+    if proxies:
+        session.proxies.update(proxies)
+
+    return session
+
 def send_upstream_request(target_url, req_json, headers):
     """发送上游请求；针对RemoteDisconnected做一次重试，降低偶发断连影响。"""
     stream_enabled = req_json.get('stream', False)
@@ -185,7 +250,7 @@ def send_upstream_request(target_url, req_json, headers):
 
     for attempt in range(2):
         try:
-            with requests.Session() as session:
+            with create_upstream_session(target_url) as session:
                 return session.post(
                     target_url,
                     json=req_json,
