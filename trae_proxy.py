@@ -26,6 +26,8 @@ KEY_FILE = os.path.join("ca", "api.deepseek.com.key")
 
 # 多后端配置
 MULTI_BACKEND_CONFIG = None
+CONFIG_FILE = "config.yaml"
+CONFIG_MTIME = None
 
 # 初始化Flask应用
 app = Flask(__name__)
@@ -59,6 +61,8 @@ def v1_root():
 def list_models():
     """列出可用模型"""
     try:
+        load_multi_backend_config()
+
         # 从配置中获取模型列表
         models = []
         if MULTI_BACKEND_CONFIG:
@@ -97,18 +101,23 @@ def debug_log(message):
 
 def load_multi_backend_config():
     """加载多后端配置"""
-    global MULTI_BACKEND_CONFIG
+    global MULTI_BACKEND_CONFIG, CONFIG_MTIME
     try:
-        config_file = "config.yaml"
-        if os.path.exists(config_file):
-            with open(config_file, 'r', encoding='utf-8') as f:
-                config = yaml.safe_load(f)
-                MULTI_BACKEND_CONFIG = config
-                logger.info(f"已加载多后端配置，共 {len(config.get('apis', []))} 个API配置")
-                return True
-        else:
+        if not os.path.exists(CONFIG_FILE):
             logger.warning("配置文件不存在，使用单后端模式")
             return False
+
+        current_mtime = os.path.getmtime(CONFIG_FILE)
+        if CONFIG_MTIME is not None and current_mtime <= CONFIG_MTIME and MULTI_BACKEND_CONFIG is not None:
+            return True
+
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f) or {}
+        MULTI_BACKEND_CONFIG = config
+        CONFIG_MTIME = current_mtime
+
+        logger.info(f"已加载多后端配置，共 {len(config.get('apis', []))} 个API配置")
+        return True
     except Exception as e:
         logger.error(f"加载多后端配置失败: {str(e)}")
         return False
@@ -226,6 +235,9 @@ def simulate_stream(response_json):
 def chat_completions():
     """处理聊天完成请求"""
     try:
+        load_multi_backend_config()
+        selected_backend = None
+
         # 检查Content-Type
         content_type = request.headers.get('Content-Type', '')
         if 'application/json' not in content_type:

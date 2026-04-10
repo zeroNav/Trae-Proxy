@@ -1,6 +1,6 @@
 services:
   trae-proxy:
-    image: vuldocker/trae-proxy:latest
+    build: .
     container_name: trae-proxy
     ports:
       - "443:443"

@@ -11,17 +11,17 @@ domain: api.deepseek.com
 #   stream_mode: 流式响应配置，null表示使用API默认行为
 #   active: 布尔值，控制该API是否被激活用于请求路由
 apis:
-  - name: "volcengine"
-    endpoint: "https://ark.cn-beijing.volces.com/api/coding/v3"
-    custom_model_id: "ark-code-latest"
-    target_model_id: "ark-code-latest"
-    stream_mode: null
-    active: true
-
   - name: "nvidia"
     endpoint: "https://integrate.api.nvidia.com/v1"
     custom_model_id: "deepseek-reasoner"
     target_model_id: "z-ai/glm5"
+    stream_mode: null
+    active: true
+
+  - name: "nvidia-super"
+    endpoint: "https://integrate.api.nvidia.com/v1"
+    custom_model_id: "nemotron-3-super"
+    target_model_id: "nvidia/nemotron-3-super-120b-a12b"
     stream_mode: null
     active: true
 
